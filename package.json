@@ -1,0 +1,22 @@
+{
+  "name": "pw-clean-ts",
+  "version": "1.0.0",
+  "description": "Clean install of Playwright using TypeScript",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alisterscott/pw-clean-ts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alisterscott/pw-clean-ts/issues"
+  },
+  "homepage": "https://github.com/alisterscott/pw-clean-ts#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.42.1",
+    "@types/node": "^20.12.4"
+  }
+}
