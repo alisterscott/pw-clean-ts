@@ -26,6 +26,12 @@ export class ToDoApp {
     this.todos.push(toDo);
   }
 
+  async createNewToDos(count: number) {
+    for (let i = 0; i < count; i++) {
+      await this.createNewToDo();
+    }
+  }
+
   async verifyInputFieldIsEmpty() {
     const newTodo = this.page.getByPlaceholder(this.placeholder);
     await expect(newTodo).toBeEmpty();
@@ -36,6 +42,21 @@ export class ToDoApp {
     await expect(this.page.getByTestId("todo-title")).toHaveText(
       this.todos.map((todo) => todo.name)
     );
+  }
+
+  async verifyItemCountCorrect() {
+    const expectedCount = this.todos.length;
+    await this.visit();
+    // create a todo count locator
+    const todoCount = this.page.getByTestId("todo-count");
+
+    // Check test using different methods.
+    await expect(
+      this.page.getByText(`${expectedCount} items left`)
+    ).toBeVisible();
+    await expect(todoCount).toHaveText(`${expectedCount} items left`);
+    await expect(todoCount).toContainText(`${expectedCount}`);
+    await expect(todoCount).toHaveText(new RegExp(`${expectedCount}`));
   }
 
   async verifyLocalStorage() {

@@ -41,22 +41,12 @@ test.describe("New Todo", () => {
 
   test("should append new items to the bottom of the list", async ({
     page,
+    todoApp,
   }) => {
-    // Create 3 items.
-    await createDefaultTodos(page);
-
-    // create a todo count locator
-    const todoCount = page.getByTestId("todo-count");
-
-    // Check test using different methods.
-    await expect(page.getByText("3 items left")).toBeVisible();
-    await expect(todoCount).toHaveText("3 items left");
-    await expect(todoCount).toContainText("3");
-    await expect(todoCount).toHaveText(/3/);
-
-    // Check all items in one call.
-    await expect(page.getByTestId("todo-title")).toHaveText(TODO_ITEMS);
-    await checkNumberOfTodosInLocalStorage(page, 3);
+    await todoApp.createNewToDos(3);
+    await todoApp.verifyItemCountCorrect();
+    await todoApp.verifyToDosDisplayed();
+    await todoApp.verifyLocalStorage();
   });
 });
 
