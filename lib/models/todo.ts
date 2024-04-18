@@ -1,6 +1,6 @@
 import { Page, expect } from "@playwright/test";
 
-export type Statuses = "Active" | "Completed" | "Deleted";
+export type Statuses = "active" | "completed" | "deleted";
 
 export class ToDoApp {
   page: Page;
@@ -13,17 +13,23 @@ export class ToDoApp {
     this.placeholder = "What needs to be done?";
   }
 
-  private async visit() {
+  async visit() {
     await this.page.goto("https://demo.playwright.dev/todomvc");
   }
 
   async createNewToDo() {
     const toDo = new ToDo();
-    await this.visit();
     const newTodo = this.page.getByPlaceholder(this.placeholder);
     await newTodo.fill(toDo.name);
     await newTodo.press("Enter");
     this.todos.push(toDo);
+  }
+
+  async UncheckFirstToDo() {
+    await this.page
+      .getByText(this.todos[0].name)
+      .getByRole("checkbox")
+      .uncheck();
   }
 
   async createNewToDos(count: number) {
@@ -32,13 +38,42 @@ export class ToDoApp {
     }
   }
 
+  async markAllAsCompleted() {
+    const toggleAllSelected = this.page.locator(".toggle-all:checked");
+    await this.page.getByLabel("Mark all as complete").check();
+    await expect(toggleAllSelected).toBeVisible();
+    this.todos.forEach((todo) => {
+      todo.status = "completed";
+    });
+  }
+
+  async markAllAsNotCompleted() {
+    const toggleAllSelected = this.page.locator(".toggle-all:checked");
+    await this.page.getByLabel("Mark all as complete").uncheck();
+    await expect(toggleAllSelected).not.toBeVisible();
+    this.todos.forEach((todo) => {
+      todo.status = "active";
+    });
+  }
+
+  async verifyTasksDisplayCompleted() {
+    await expect(this.page.getByTestId("todo-item")).toHaveClass(
+      this.todos.map((todo) => todo.status)
+    );
+  }
+
+  async verifyTasksDisplayNotCompleted() {
+    await expect(this.page.getByTestId("todo-item")).toHaveClass(
+      this.todos.map(() => "")
+    );
+  }
+
   async verifyInputFieldIsEmpty() {
     const newTodo = this.page.getByPlaceholder(this.placeholder);
     await expect(newTodo).toBeEmpty();
   }
 
   async verifyToDosDisplayed() {
-    await this.visit();
     await expect(this.page.getByTestId("todo-title")).toHaveText(
       this.todos.map((todo) => todo.name)
     );
@@ -46,7 +81,6 @@ export class ToDoApp {
 
   async verifyItemCountCorrect() {
     const expectedCount = this.todos.length;
-    await this.visit();
     // create a todo count locator
     const todoCount = this.page.getByTestId("todo-count");
 
@@ -60,12 +94,22 @@ export class ToDoApp {
   }
 
   async verifyLocalStorage() {
-    await this.page.waitForFunction((e) => {
-      return JSON.parse(localStorage["react-todos"]).length === e;
+    await this.page.waitForFunction((l) => {
+      return JSON.parse(localStorage["react-todos"]).length === l;
     }, this.todos.length);
     for (const todo of this.todos) {
       await this.checkTodosInLocalStorage(todo.name);
     }
+  }
+
+  async checkNumberOfCompletedTodosInLocalStorage(expected: number) {
+    return await this.page.waitForFunction((e) => {
+      return (
+        JSON.parse(localStorage["react-todos"]).filter(
+          (todo: any) => todo.completed
+        ).length === e
+      );
+    }, expected);
   }
 
   private async checkTodosInLocalStorage(title: string) {
@@ -84,6 +128,6 @@ export class ToDo {
 
   constructor() {
     this.name = `Do ${Date.now() + Math.floor(Math.random() * 100)}`;
-    this.status = "Active";
+    this.status = "active";
   }
 }

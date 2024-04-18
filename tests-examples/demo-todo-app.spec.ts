@@ -10,18 +10,19 @@ const test = base.extend<{ todoApp: ToDoApp }>({
   },
 });
 
-test.beforeEach(async ({ page }) => {
-  await page.goto("https://demo.playwright.dev/todomvc");
-});
+// test.beforeEach(async ({ page }) => {
+//   await page.goto("https://demo.playwright.dev/todomvc");
+// });
 
-const TODO_ITEMS = [
-  "buy some cheese",
-  "feed the cat",
-  "book a doctors appointment",
-];
+// const TODO_ITEMS = [
+//   "buy some cheese",
+//   "feed the cat",
+//   "book a doctors appointment",
+// ];
 
 test.describe("New Todo", () => {
   test("should allow me to add todo items", async ({ todoApp }) => {
+    await todoApp.visit();
     await todoApp.createNewToDo();
     await todoApp.verifyToDosDisplayed();
     await todoApp.verifyLocalStorage();
@@ -33,6 +34,7 @@ test.describe("New Todo", () => {
   test("should clear text input field when an item is added", async ({
     todoApp,
   }) => {
+    await todoApp.visit();
     await todoApp.createNewToDo();
     await todoApp.verifyInputFieldIsEmpty();
     await todoApp.verifyToDosDisplayed();
@@ -40,9 +42,9 @@ test.describe("New Todo", () => {
   });
 
   test("should append new items to the bottom of the list", async ({
-    page,
     todoApp,
   }) => {
+    await todoApp.visit();
     await todoApp.createNewToDos(3);
     await todoApp.verifyItemCountCorrect();
     await todoApp.verifyToDosDisplayed();
@@ -51,47 +53,54 @@ test.describe("New Todo", () => {
 });
 
 test.describe("Mark all as completed", () => {
-  test.beforeEach(async ({ page }) => {
-    await createDefaultTodos(page);
-    await checkNumberOfTodosInLocalStorage(page, 3);
-  });
+  test("should allow me to mark all items as completed", async ({
+    page,
+    todoApp,
+  }) => {
+    // Create todos
+    await todoApp.visit();
+    await todoApp.createNewToDos(3);
 
-  test.afterEach(async ({ page }) => {
-    await checkNumberOfTodosInLocalStorage(page, 3);
-  });
-
-  test("should allow me to mark all items as completed", async ({ page }) => {
     // Complete all todos.
-    await page.getByLabel("Mark all as complete").check();
+    await todoApp.markAllAsCompleted();
 
     // Ensure all todos have 'completed' class.
-    await expect(page.getByTestId("todo-item")).toHaveClass([
-      "completed",
-      "completed",
-      "completed",
-    ]);
-    await checkNumberOfCompletedTodosInLocalStorage(page, 3);
+    await todoApp.verifyTasksDisplayCompleted();
+    await todoApp.checkNumberOfCompletedTodosInLocalStorage(3);
   });
 
   test("should allow me to clear the complete state of all items", async ({
     page,
+    todoApp,
   }) => {
-    const toggleAll = page.getByLabel("Mark all as complete");
-    // Check and then immediately uncheck.
-    await toggleAll.check();
-    await toggleAll.uncheck();
+    // Create todos
+    await todoApp.visit();
+    await todoApp.createNewToDos(3);
 
-    // Should be no completed classes.
-    await expect(page.getByTestId("todo-item")).toHaveClass(["", "", ""]);
+    // Mark all as complete using shortcut button
+    await todoApp.markAllAsCompleted();
+
+    // Mark all as not-complete using shortcut button
+    await todoApp.markAllAsNotCompleted();
+
+    // Verify all display as not complete
+    await todoApp.verifyTasksDisplayNotCompleted();
   });
 
   test("complete all checkbox should update state when items are completed / cleared", async ({
     page,
+    todoApp,
   }) => {
-    const toggleAll = page.getByLabel("Mark all as complete");
-    await toggleAll.check();
-    await expect(toggleAll).toBeChecked();
-    await checkNumberOfCompletedTodosInLocalStorage(page, 3);
+    // Create todos
+    await todoApp.visit();
+    await todoApp.createNewToDos(3);
+
+    // Mark all as complete using shortcut button
+    await todoApp.markAllAsCompleted();
+
+    // Ensure all todos have 'completed' class.
+    await todoApp.verifyTasksDisplayCompleted();
+    await todoApp.checkNumberOfCompletedTodosInLocalStorage(3);
 
     // Uncheck first todo.
     const firstTodo = page.getByTestId("todo-item").nth(0);
